@@ -4,6 +4,7 @@ let books = require("./booksdb.js");
 const regd_users = express();
 const bodyParser = require("body-parser");
 
+//store users
 let users = [];
 
 const isValid = (username) => {
