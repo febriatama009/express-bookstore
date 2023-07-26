@@ -21,8 +21,6 @@ const isValid = (username) => {
 };
 
 const authenticatedUser = (username, password) => {
-  //returns boolean
-  //write code to check if username and password match the one we have in records.
   let validUsers = users.filter((user) => {
     return user.username === username && user.password === password;
   });
@@ -35,7 +33,7 @@ const authenticatedUser = (username, password) => {
 
 regd_users.use(bodyParser.json());
 
-//only registered users can login
+//login logic
 regd_users.post("/login", (req, res) => {
   //Write your code here
   const username = req.body.username;
@@ -71,7 +69,6 @@ regd_users.post("/login", (req, res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
   const isbn = req.params.isbn;
   const reviewData = req.params;
 
@@ -79,13 +76,10 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     return res.status(404).json({ message: "Book not found" });
   }
 
-  // Save the original reviews to check if a new review was added
   const originalReviews = books[isbn].reviews;
 
-  // Update the reviews of the corresponding book in the 'books' object
   books[isbn].reviews = { ...originalReviews, ...reviewData };
 
-  // Check if a new review was added
   const newReviewsAdded = Object.keys(reviewData).some(
     (key) => originalReviews[key] !== reviewData[key]
   );
@@ -96,6 +90,26 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
       .status(400)
       .json({ message: "Review data unchanged or invalid" });
   }
+});
+
+// Delete a book review
+regd_users.delete("/auth/review/:isbn/:reviewId", (req, res) => {
+  const isbn = req.params.isbn;
+  const reviewId = req.params.reviewId;
+
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+
+  const reviews = books[isbn].reviews;
+
+  if (!reviews[reviewId]) {
+    return res.status(404).json({ message: "Review not found" });
+  }
+
+  delete reviews[reviewId];
+
+  return res.status(200).json({ message: "Review successfully deleted" });
 });
 
 module.exports.authenticated = regd_users;

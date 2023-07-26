@@ -27,24 +27,44 @@ public_users.post("/register", (req, res) => {
     .json({ message: "Invalid credentials for registration" });
 });
 
-// Get the book list available in the shop
-public_users.get("/", function (req, res) {
+// Get All Books
+public_users.get("/", async function (req, res) {
   //Write your code here
-  const allBooks = Object.values(books);
-  return res.status(200).json({ books: allBooks });
+  try {
+    const allBooks = await new Promise((resolve) => {
+      setTimeout(() => {
+        const book = Object.values(books);
+        resolve(book);
+      }, 1000);
+    });
+
+    return res.status(200).json({ books: allBooks });
+  } catch (err) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 // Get book details based on ISBN
 public_users.get("/isbn/:isbn", function (req, res) {
-  //Write your code here
   const isbn = req.params.isbn;
 
-  // Check if the book with the given ISBN exists in the 'books' object
-  if (books[isbn]) {
-    return res.status(200).json({ book: books[isbn] });
-  } else {
-    return res.status(404).json({ message: "Book not found" });
-  }
+  const findBookByISBN = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (books[isbn]) {
+        resolve(books[isbn]);
+      } else {
+        reject(new Error("Book not found"));
+      }
+    }, 1000);
+  });
+
+  findBookByISBN
+    .then((book) => {
+      return res.status(200).json({ book: book });
+    })
+    .catch((error) => {
+      return res.status(404).json({ message: error.message });
+    });
 });
 
 // Get book details based on author
