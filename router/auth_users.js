@@ -1,14 +1,15 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 let books = require("./booksdb.js");
-const regd_users = express.Router();
+const regd_users = express();
+const bodyParser = require("body-parser");
 
 let users = [];
 
 const isValid = (username) => {
   //returns boolean
   //write code to check is the username is valid
-  let userWithSameName = users_data.filter((user) => {
+  let userWithSameName = users.filter((user) => {
     return user.username === username;
   });
   if (userWithSameName.length > 0) {
@@ -21,7 +22,7 @@ const isValid = (username) => {
 const authenticatedUser = (username, password) => {
   //returns boolean
   //write code to check if username and password match the one we have in records.
-  let validUsers = users_data.filter((user) => {
+  let validUsers = users.filter((user) => {
     return user.username === username && user.password === password;
   });
   if (validUsers.length > 0) {
@@ -31,11 +32,13 @@ const authenticatedUser = (username, password) => {
   }
 };
 
+regd_users.use(bodyParser.json());
+
 //only registered users can login
 regd_users.post("/login", (req, res) => {
   //Write your code here
-  const username = req.query.username;
-  const password = req.query.password;
+  const username = req.body.username;
+  const password = req.body.password;
 
   //error
   if (!username || !password) {
@@ -69,13 +72,29 @@ regd_users.post("/login", (req, res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
   const isbn = req.params.isbn;
-  const reviews = req.body;
+  const reviewData = req.params;
 
   if (!books[isbn]) {
     return res.status(404).json({ message: "Book not found" });
   }
 
-  books[isbn].reviews = { ...books[isbn].reviews, ...reviewData };
+  // Save the original reviews to check if a new review was added
+  const originalReviews = books[isbn].reviews;
+
+  // Update the reviews of the corresponding book in the 'books' object
+  books[isbn].reviews = { ...originalReviews, ...reviewData };
+
+  // Check if a new review was added
+  const newReviewsAdded = Object.keys(reviewData).some(
+    (key) => originalReviews[key] !== reviewData[key]
+  );
+  if (newReviewsAdded) {
+    return res.status(200).json({ message: "Review successfully added" });
+  } else {
+    return res
+      .status(400)
+      .json({ message: "Review data unchanged or invalid" });
+  }
 });
 
 module.exports.authenticated = regd_users;
